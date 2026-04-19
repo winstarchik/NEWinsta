@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lead Console</title>
+    <style>
+      :root {
+        --bg: #f3eee5;
+        --bg-accent: radial-gradient(circle at top left, rgba(255, 192, 140, 0.35), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(255, 132, 92, 0.22), transparent 28%),
+          linear-gradient(135deg, #faf4ea 0%, #efe4d4 100%);
+        --panel: rgba(255, 252, 247, 0.92);
+        --panel-strong: #fffdf9;
+        --panel-soft: rgba(255, 249, 241, 0.72);
+        --border: rgba(88, 62, 34, 0.12);
+        --border-strong: rgba(197, 93, 45, 0.28);
+        --text: #261c13;
+        --muted: #6f6254;
+        --accent: #c95c2c;
+        --accent-hover: #a54920;
+        --secondary: #e7d8c8;
+        --secondary-hover: #dcc8b3;
+        --inbound: #fff2e5;
+        --outbound: #eef5ff;
+        --shadow: 0 20px 60px rgba(74, 52, 27, 0.12);
+        --cold: #8f6d45;
+        --warm: #ca7f0f;
+        --hot: #c23939;
+      }
+
+      body[data-theme='dark'] {
+        --bg: #161719;
+        --bg-accent: radial-gradient(circle at top left, rgba(255, 119, 59, 0.18), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(77, 114, 255, 0.18), transparent 28%),
+          linear-gradient(135deg, #17181c 0%, #0e0f12 100%);
+        --panel: rgba(28, 30, 35, 0.9);
+        --panel-strong: #23262c;
+        --panel-soft: rgba(35, 38, 44, 0.78);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-strong: rgba(255, 138, 92, 0.34);
+        --text: #f2ede6;
+        --muted: #aca39a;
+        --accent: #ff8a4f;
+        --accent-hover: #ff7430;
+        --secondary: #31353d;
+        --secondary-hover: #3c424d;
+        --inbound: #33271f;
+        --outbound: #1f2b39;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+        --cold: #d3b184;
+        --warm: #ffbf52;
+        --hot: #ff8e8e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: var(--bg-accent);
+        color: var(--text);
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 340px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        padding: 22px;
+        border-right: 1px solid var(--border);
+        background: rgba(255, 250, 243, 0.58);
+        backdrop-filter: blur(22px);
+      }
+
+      body[data-theme='dark'] .sidebar {
+        background: rgba(13, 14, 17, 0.62);
+      }
+
+      .main {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
+        gap: 18px;
+        min-height: 0;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+      }
+
+      .panel-inner {
+        padding: 20px;
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      .hero p,
+      .muted,
+      .empty,
+      .meta-text {
+        color: var(--muted);
+      }
+
+      .section-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .section-title h2,
+      .section-title h3 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .toolbar,
+      .button-row,
+      .inline-fields {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .inline-fields > * {
+        flex: 1 1 140px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 16px;
+        cursor: pointer;
+        transition: transform 0.16s ease, background 0.16s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      button.primary:hover {
+        background: var(--accent-hover);
+      }
+
+      button.secondary {
+        background: var(--secondary);
+        color: var(--text);
+      }
+
+      button.secondary:hover {
+        background: var(--secondary-hover);
+      }
+
+      button.ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--panel-strong);
+        color: var(--text);
+        padding: 12px 14px;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 110px;
+      }
+
+      .conversation-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .conversation-item {
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 14px;
+        background: var(--panel-soft);
+        cursor: pointer;
+        transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+      }
+
+      .conversation-item:hover,
+      .conversation-item.active {
+        transform: translateY(-1px);
+        border-color: var(--border-strong);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .conversation-item strong {
+        display: block;
+      }
+
+      .conversation-item p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      .badge.cold {
+        background: rgba(143, 109, 69, 0.12);
+        color: var(--cold);
+      }
+
+      .badge.warm {
+        background: rgba(202, 127, 15, 0.12);
+        color: var(--warm);
+      }
+
+      .badge.hot {
+        background: rgba(194, 57, 57, 0.14);
+        color: var(--hot);
+      }
+
+      .conversation-card {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        min-height: 0;
+      }
+
+      .messages {
+        display: grid;
+        gap: 12px;
+        overflow: auto;
+        max-height: 58vh;
+        padding-right: 4px;
+      }
+
+      .message {
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        padding: 14px 16px;
+      }
+
+      .message.inbound {
+        background: var(--inbound);
+      }
+
+      .message.outbound {
+        background: var(--outbound);
+      }
+
+      .message-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .profile-layout {
+        display: grid;
+        gap: 16px;
+      }
+
+      .profile-card {
+        background: var(--panel-soft);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 16px;
+      }
+
+      .profile-card pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .status {
+        min-height: 22px;
+        color: var(--muted);
+      }
+
+      .status.error {
+        color: #d33f3f;
+      }
+
+      @media (max-width: 1180px) {
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 920px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="light">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="panel">
+          <div class="panel-inner stack">
+            <div class="section-title">
+              <h2>Новый лид</h2>
+            </div>
+            <input id="new-user-id" placeholder="Например: insta_anna_01" />
+            <textarea id="new-user-message" placeholder="Первое сообщение лида, если уже есть"></textarea>
+            <div class="button-row">
+              <button class="primary" id="create-conversation">Создать диалог</button>
+              <button class="secondary" id="refresh-list">Обновить</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top: 20px;">
+          <h3>Лиды</h3>
+          <span class="muted" id="lead-count">0</span>
+        </div>
+        <div class="conversation-list" id="conversation-list"></div>
+      </aside>
+
+      <main class="main">
+        <section class="panel">
+          <div class="panel-inner hero">
+            <div>
+              <h1>Lead Console</h1>
+              <p>Локальная рабочая панель для Instagram-лидов: история, анкета, быстрый ответ и карточка для перевода в Telegram.</p>
+              <div class="toolbar">
+                <span class="badge cold" id="current-stage">cold</span>
+                <span class="muted">Работает локально на твоём сервере без Meta API.</span>
+              </div>
+            </div>
+            <div class="button-row">
+              <button class="ghost" id="theme-toggle">Тёмная тема</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel conversation-card">
+            <div class="panel-inner">
+              <div class="section-title">
+                <h2 id="conversation-title">Диалог не выбран</h2>
+                <span class="meta-text" id="conversation-meta">Выбери лида слева или создай новый.</span>
+              </div>
+            </div>
+            <div class="panel-inner" style="padding-top: 0;">
+              <div class="messages" id="messages">
+                <div class="empty">История появится здесь.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-layout">
+            <section class="panel">
+              <div class="panel-inner stack">
+                <div class="section-title">
+                  <h2>Анкета лида</h2>
+                  <span class="muted" id="profile-hint">Сохраняется в базе</span>
+                </div>
+                <input id="profile-name" placeholder="Имя" />
+                <div class="inline-fields">
+                  <input id="profile-country" placeholder="Страна" />
+                  <input id="profile-citizenship" placeholder="Гражданство" />
+                </div>
+                <div class="inline-fields">
+                  <input id="profile-age" placeholder="Возраст" />
+                  <select id="profile-passport">
+                    <option value="">Загранпаспорт: не указано</option>
+                    <option value="yes">Есть</option>
+                    <option value="no">Нет</option>
+                    <option value="processing">В процессе</option>
+                    <option value="unknown">Неизвестно</option>
+                  </select>
+                </div>
+                <input id="profile-telegram-label" placeholder="Метка для Telegram, например Анна Польша" />
+                <textarea id="profile-notes" placeholder="Заметки: документы, возраст, что спрашивал, как распознать"></textarea>
+                <div class="button-row">
+                  <button class="primary" id="save-profile">Сохранить анкету</button>
+                  <button class="secondary" id="copy-telegram-card">Скопировать карточку</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-inner">
+                <div class="section-title">
+                  <h2>Карточка для Telegram</h2>
+                </div>
+                <div class="profile-card">
+                  <pre id="telegram-card-preview">Здесь появится краткая карточка лида.</pre>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-inner stack">
+            <div class="section-title">
+              <h2>Входящее сообщение</h2>
+              <span class="muted">Скопируй из Instagram и вставь сюда</span>
+            </div>
+            <textarea id="incoming-message" placeholder="Новое сообщение из Instagram Direct"></textarea>
+            <div class="button-row">
+              <button class="primary" id="save-inbound">Сохранить входящее</button>
+              <button class="primary" id="generate-reply">Сгенерировать ответ</button>
+              <button class="secondary" id="copy-reply">Скопировать последний ответ</button>
+            </div>
+            <div class="status" id="status"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const state = {
+        conversations: [],
+        selectedUserId: '',
+        latestReply: '',
+        telegramLeadCard: '',
+        theme: localStorage.getItem('lead-console-theme') || 'light',
+      };
+
+      const elements = {
+        list: document.getElementById('conversation-list'),
+        leadCount: document.getElementById('lead-count'),
+        currentStage: document.getElementById('current-stage'),
+        title: document.getElementById('conversation-title'),
+        meta: document.getElementById('conversation-meta'),
+        messages: document.getElementById('messages'),
+        incomingMessage: document.getElementById('incoming-message'),
+        status: document.getElementById('status'),
+        newUserId: document.getElementById('new-user-id'),
+        newUserMessage: document.getElementById('new-user-message'),
+        themeToggle: document.getElementById('theme-toggle'),
+        profileName: document.getElementById('profile-name'),
+        profileCountry: document.getElementById('profile-country'),
+        profileCitizenship: document.getElementById('profile-citizenship'),
+        profileAge: document.getElementById('profile-age'),
+        profilePassport: document.getElementById('profile-passport'),
+        profileTelegramLabel: document.getElementById('profile-telegram-label'),
+        profileNotes: document.getElementById('profile-notes'),
+        telegramCardPreview: document.getElementById('telegram-card-preview'),
+      };
+
+      applyTheme(state.theme);
+
+      document.getElementById('refresh-list').addEventListener('click', refreshConversations);
+      document.getElementById('create-conversation').addEventListener('click', createConversation);
+      document.getElementById('save-inbound').addEventListener('click', saveInboundMessage);
+      document.getElementById('generate-reply').addEventListener('click', generateReply);
+      document.getElementById('copy-reply').addEventListener('click', copyLatestReply);
+      document.getElementById('save-profile').addEventListener('click', saveProfile);
+      document.getElementById('copy-telegram-card').addEventListener('click', copyTelegramCard);
+      elements.themeToggle.addEventListener('click', toggleTheme);
+
+      refreshConversations();
+
+      async function refreshConversations() {
+        setStatus('Обновляю список лидов...');
+        try {
+          const response = await request('/api/conversations');
+          state.conversations = response.conversations || [];
+          renderConversationList();
+
+          if (!state.selectedUserId && state.conversations.length > 0) {
+            await openConversation(state.conversations[0].userId);
+          } else if (state.selectedUserId) {
+            await openConversation(state.selectedUserId, { silent: true });
+          } else {
+            renderEmptyConversation();
+          }
+
+          setStatus('Список обновлён.');
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      async function createConversation() {
+        const userId = elements.newUserId.value.trim();
+        const text = elements.newUserMessage.value.trim();
+
+        if (!userId) {
+          setStatus('Укажи userId для нового лида.', true);
+          return;
+        }
+
+        setStatus('Создаю диалог...');
+        try {
+          const response = await request('/api/conversations', {
+            method: 'POST',
+            body: JSON.stringify({ userId, text }),
+          });
+
+          state.conversations = response.summaries || [];
+          elements.newUserId.value = '';
+          elements.newUserMessage.value = '';
+          renderConversationList();
+          await openConversation(userId, { conversation: response.conversation });
+          setStatus('Диалог создан.');
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      async function openConversation(userId, options = {}) {
+        state.selectedUserId = userId;
+        renderConversationList();
+
+        try {
+          const conversation = options.conversation || (await request(`/api/conversations/${encodeURIComponent(userId)}`)).conversation;
+          renderConversation(conversation);
+          if (!options.silent) {
+            setStatus('Диалог загружен.');
+          }
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      async function saveInboundMessage() {
+        if (!state.selectedUserId) {
+          setStatus('Сначала выбери диалог.', true);
+          return;
+        }
+
+        const text = elements.incomingMessage.value.trim();
+        if (!text) {
+          setStatus('Вставь входящее сообщение.', true);
+          return;
+        }
+
+        setStatus('Сохраняю сообщение лида...');
+        try {
+          const response = await request(`/api/conversations/${encodeURIComponent(state.selectedUserId)}/inbound`, {
+            method: 'POST',
+            body: JSON.stringify({ text }),
+          });
+
+          elements.incomingMessage.value = '';
+          state.conversations = response.summaries || state.conversations;
+          renderConversationList();
+          renderConversation(response.conversation);
+          setStatus('Сообщение сохранено.');
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      async function generateReply() {
+        if (!state.selectedUserId) {
+          setStatus('Сначала выбери диалог.', true);
+          return;
+        }
+
+        setStatus('Генерирую ответ...');
+        try {
+          const response = await request(`/api/conversations/${encodeURIComponent(state.selectedUserId)}/generate-reply`, {
+            method: 'POST',
+          });
+
+          state.latestReply = response.reply || '';
+          state.conversations = response.summaries || state.conversations;
+          renderConversationList();
+          renderConversation(response.conversation);
+          setStatus('Ответ готов. Можно копировать и отправлять в Instagram.');
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      async function saveProfile() {
+        if (!state.selectedUserId) {
+          setStatus('Сначала выбери диалог.', true);
+          return;
+        }
+
+        setStatus('Сохраняю анкету...');
+        try {
+          const response = await request(`/api/conversations/${encodeURIComponent(state.selectedUserId)}/profile`, {
+            method: 'PATCH',
+            body: JSON.stringify(collectProfileForm()),
+          });
+
+          state.conversations = response.summaries || state.conversations;
+          renderConversationList();
+          renderConversation(response.conversation);
+          setStatus('Анкета сохранена.');
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      async function copyLatestReply() {
+        if (!state.latestReply) {
+          setStatus('Сначала сгенерируй ответ.', true);
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(state.latestReply);
+          setStatus('Последний ответ скопирован.');
+        } catch (_error) {
+          setStatus('Не удалось скопировать ответ. Скопируй вручную из истории.', true);
+        }
+      }
+
+      async function copyTelegramCard() {
+        if (!state.telegramLeadCard) {
+          setStatus('Карточка лида пока пустая.', true);
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(state.telegramLeadCard);
+          setStatus('Карточка для Telegram скопирована.');
+        } catch (_error) {
+          setStatus('Не удалось скопировать карточку.', true);
+        }
+      }
+
+      function renderConversationList() {
+        elements.leadCount.textContent = String(state.conversations.length);
+
+        if (state.conversations.length === 0) {
+          elements.list.innerHTML = '<div class="empty">Пока нет лидов. Создай первый диалог.</div>';
+          return;
+        }
+
+        elements.list.innerHTML = state.conversations
+          .map((conversation) => {
+            const activeClass = conversation.userId === state.selectedUserId ? 'active' : '';
+            const displayName = escapeHtml(conversation.profile?.name || conversation.userId);
+            const stage = escapeHtml(conversation.stage || 'cold');
+            const subtitle = escapeHtml(conversation.profile?.telegramLabel || conversation.lastMessageText || 'Без сообщений');
+            const time = conversation.updatedAt ? new Date(conversation.updatedAt).toLocaleString('ru-RU') : 'Без даты';
+            return `
+              <button class="conversation-item ${activeClass}" data-user-id="${escapeHtml(conversation.userId)}">
+                <strong>${displayName}</strong>
+                <p>${escapeHtml(conversation.userId)}</p>
+                <p>${subtitle}</p>
+                <p style="margin-top: 8px;">
+                  <span class="badge ${stage}">${stage}</span>
+                  <span style="margin-left: 8px;">${time}</span>
+                </p>
+              </button>
+            `;
+          })
+          .join('');
+
+        elements.list.querySelectorAll('[data-user-id]').forEach((button) => {
+          button.addEventListener('click', () => openConversation(button.dataset.userId));
+        });
+      }
+
+      function renderConversation(conversation) {
+        if (!conversation) {
+          renderEmptyConversation();
+          return;
+        }
+
+        state.selectedUserId = conversation.userId;
+        state.latestReply = findLatestReply(conversation.messages || []);
+        state.telegramLeadCard = conversation.telegramLeadCard || '';
+
+        elements.title.textContent = conversation.profile?.name || conversation.userId;
+        elements.meta.textContent = `Instagram ID: ${conversation.userId}. Сообщений: ${(conversation.messages || []).length}. Обновлён: ${new Date(conversation.updatedAt).toLocaleString('ru-RU')}`;
+        renderStage(conversation.stage || 'cold');
+        fillProfileForm(conversation.profile || {});
+        elements.telegramCardPreview.textContent = state.telegramLeadCard || 'Карточка лида пока пустая.';
+
+        if (!conversation.messages || conversation.messages.length === 0) {
+          elements.messages.innerHTML = '<div class="empty">У этого лида пока нет сообщений.</div>';
+        } else {
+          elements.messages.innerHTML = conversation.messages
+            .map((message) => {
+              const direction = message.direction === 'outbound' ? 'outbound' : 'inbound';
+              const label = direction === 'outbound' ? 'Менеджер' : 'Лид';
+              const timestamp = message.timestamp ? new Date(Number(message.timestamp)).toLocaleString('ru-RU') : 'Без времени';
+              return `
+                <article class="message ${direction}">
+                  <div class="message-header">
+                    <strong>${label}</strong>
+                    <span>${timestamp}</span>
+                  </div>
+                  <div>${escapeHtml(message.text || '')}</div>
+                </article>
+              `;
+            })
+            .join('');
+        }
+
+        renderConversationList();
+      }
+
+      function renderEmptyConversation() {
+        state.selectedUserId = '';
+        state.latestReply = '';
+        state.telegramLeadCard = '';
+        elements.title.textContent = 'Диалог не выбран';
+        elements.meta.textContent = 'Выбери лида слева или создай новый.';
+        elements.messages.innerHTML = '<div class="empty">История появится здесь.</div>';
+        elements.telegramCardPreview.textContent = 'Здесь появится краткая карточка лида.';
+        fillProfileForm({});
+        renderStage('cold');
+      }
+
+      function fillProfileForm(profile) {
+        elements.profileName.value = profile.name || '';
+        elements.profileCountry.value = profile.country || '';
+        elements.profileCitizenship.value = profile.citizenship || '';
+        elements.profileAge.value = profile.age || '';
+        elements.profilePassport.value = profile.passportStatus || '';
+        elements.profileTelegramLabel.value = profile.telegramLabel || '';
+        elements.profileNotes.value = profile.notes || '';
+      }
+
+      function collectProfileForm() {
+        return {
+          name: elements.profileName.value.trim(),
+          country: elements.profileCountry.value.trim(),
+          citizenship: elements.profileCitizenship.value.trim(),
+          age: elements.profileAge.value.trim(),
+          passportStatus: elements.profilePassport.value,
+          telegramLabel: elements.profileTelegramLabel.value.trim(),
+          notes: elements.profileNotes.value.trim(),
+        };
+      }
+
+      function renderStage(stage) {
+        elements.currentStage.className = `badge ${stage}`;
+        elements.currentStage.textContent = stage;
+      }
+
+      function findLatestReply(messages) {
+        const outbound = [...messages].reverse().find((message) => message.direction === 'outbound');
+        return outbound ? outbound.text || '' : '';
+      }
+
+      function setStatus(message, isError = false) {
+        elements.status.textContent = message || '';
+        elements.status.className = isError ? 'status error' : 'status';
+      }
+
+      function toggleTheme() {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(state.theme);
+      }
+
+      function applyTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('lead-console-theme', theme);
+        elements.themeToggle.textContent = theme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
+      }
+
+      async function request(url, options = {}) {
+        const response = await fetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          ...options,
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || 'Request failed');
+        }
+
+        return data;
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+    </script>
+  </body>
+</html>
